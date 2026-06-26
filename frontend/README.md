@@ -1,32 +1,31 @@
-# React + TypeScript + Vite
+# SkillVault Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React, TypeScript, and Vite frontend for SkillVault.
 
-Currently, two official plugins are available:
+SkillVault captures everyday learning wins, extracts the skills behind them, and turns them into a searchable evidence graph and progress report.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What it includes
 
-## React Compiler
+- Capture and AI extraction of skill evidence from a micro-win
+- Saving evidence notes to the FastAPI and SQLite backend
+- Searchable SkillVault explorer and interactive skill graph
+- AI-generated Skill Report with a copyable portfolio blurb
+- Persisted light and dark themes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Run locally
 
-## Expanding the Oxlint configuration
+Use Node.js 20.19 or newer.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The frontend expects the FastAPI backend at `http://<current-host>:8000` and normally runs at `http://localhost:5173`.
+
+## Checks
+
+```bash
+npm run lint
+npm run build
+```
