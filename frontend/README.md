@@ -2,14 +2,14 @@
 
 React, TypeScript, and Vite frontend for Apogee.
 
-Apogee captures everyday learning wins, extracts the skills behind them, and turns them into a searchable evidence graph and progress report.
+Apogee turns everyday learning wins into visible proof of growth.
 
 ## What it includes
 
-- Capture and AI extraction of skill evidence from a micro-win
-- Saving evidence notes to the FastAPI and SQLite backend
-- Searchable Apogee explorer and interactive skill graph
-- AI-generated Skill Report with a copyable portfolio blurb
+- Capture a micro-win and extract structured skill evidence
+- Save evidence notes to the FastAPI and SQLite backend
+- Search and inspect saved notes in the Skill Graph
+- Generate a Growth Snapshot with summary, skill signals, evidence, next actions, resume bullets, interview talking points, a sprint plan, and a copyable portfolio blurb
 - Persisted light and dark themes
 
 ## Run locally

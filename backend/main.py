@@ -50,8 +50,11 @@ class SkillReport(BaseModel):
     headline: str = Field(description="A concise headline that captures the student's growth.")
     progress_summary: str = Field(description="A clear summary of learning and progress over time.")
     top_skills: list[str] = Field(description="The most recurring or meaningful demonstrated skills.")
-    evidence: list[str] = Field(description="Specific evidence drawn only from the saved wins.")
-    recommended_next_steps: list[str] = Field(description="Practical next steps based on the saved wins.")
+    evidence: list[str] = Field(description="Specific evidence drawn only from the saved evidence notes.")
+    recommended_next_steps: list[str] = Field(description="Practical next steps based on the saved evidence notes.")
+    resume_bullets: list[str] = Field(description="Two or three honest resume-style bullets grounded in saved evidence.")
+    interview_talking_points: list[str] = Field(description="Two or three talking points the student can use to explain what they learned.")
+    next_sprint_plan: list[str] = Field(description="Two or three concrete next actions for the student's next learning sprint.")
     portfolio_blurb: str = Field(
         description="A concise professional blurb suitable for a resume, LinkedIn, or personal website."
     )
@@ -132,7 +135,7 @@ Student's micro-win:
 
 
 def generate_skill_report(wins: list[SavedWin]) -> SkillReport:
-    """Ask Gemini to synthesize saved wins into a structured progress report."""
+    """Ask Gemini to synthesize saved evidence notes into a grounded growth snapshot."""
     client = get_gemini_client()
     saved_wins = [
         win.model_dump(
@@ -148,18 +151,22 @@ def generate_skill_report(wins: list[SavedWin]) -> SkillReport:
         for win in wins
     ]
     prompt = f"""
-You are a college learning coach creating a skill report from a student's saved learning wins.
+You are a college learning coach creating a grounded growth snapshot from a student's saved evidence notes.
 
 Rules:
-- Do not invent accomplishments, outcomes, projects, or experience.
-- Base every statement only on evidence in the saved wins below.
-- Identify recurring skills, themes, and patterns across the wins.
-- Write in a clear student and professional-development tone.
-- Make each evidence item specific and grounded in the saved wins.
-- Make recommended next steps practical and connected to the observed growth.
+- Do not invent accomplishments, internships, jobs, users, metrics, production impact, credentials, or outcomes.
+- Base every statement only on evidence in the saved notes below.
+- Do not add quantified impact unless numbers appear in the saved notes.
+- Identify recurring skills, themes, and patterns across the notes.
+- Write in a clear, realistic student professional-development tone.
+- Make each evidence item specific and grounded in the saved notes.
+- Make recommended_next_steps practical and connected to observed growth.
+- Make resume_bullets honest, student-appropriate, and based only on saved notes.
+- Make interview_talking_points help the student explain what they learned and how they approached problems.
+- Make next_sprint_plan concrete: small actions the student can take next.
 - Make portfolio_blurb concise enough to paste into a resume, LinkedIn, or personal website.
 
-Saved wins (most recent first):
+Saved evidence notes (most recent first):
 {json.dumps(saved_wins, indent=2)}
 """
 
@@ -189,6 +196,7 @@ def root():
 
 @app.post("/api/analyze", response_model=AnalyzeResponse)
 def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
+    initialize_database()
     try:
         return analyze_micro_win(request.text)
     except Exception as error:
@@ -197,6 +205,7 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
 
 @app.post("/api/wins", response_model=SavedWin, status_code=201)
 def save_win(request: SaveWinRequest) -> SavedWin:
+    initialize_database()
     created_at = datetime.now(timezone.utc).isoformat()
     analysis = request.analysis
 
@@ -233,6 +242,7 @@ def save_win(request: SaveWinRequest) -> SavedWin:
 
 @app.get("/api/wins", response_model=list[SavedWin])
 def get_wins() -> list[SavedWin]:
+    initialize_database()
     with get_database() as connection:
         rows = connection.execute(
             "SELECT * FROM wins ORDER BY created_at DESC, id DESC"
@@ -243,6 +253,7 @@ def get_wins() -> list[SavedWin]:
 
 @app.get("/api/report", response_model=SkillReport)
 def get_report(limit: int = Query(default=10, ge=1, le=50)) -> SkillReport:
+    initialize_database()
     with get_database() as connection:
         rows = connection.execute(
             "SELECT * FROM wins ORDER BY created_at DESC, id DESC LIMIT ?",
@@ -252,7 +263,7 @@ def get_report(limit: int = Query(default=10, ge=1, le=50)) -> SkillReport:
     if not rows:
         raise HTTPException(
             status_code=400,
-            detail="A skill report cannot be generated without saved wins.",
+            detail="A growth snapshot cannot be generated without saved evidence notes.",
         )
 
     try:

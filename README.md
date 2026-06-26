@@ -1,6 +1,19 @@
 # Apogee
 
-Apogee captures everyday learning wins, extracts the skills behind them, and turns them into a searchable evidence graph and progress report.
+Apogee turns everyday learning wins into visible proof of growth.
+
+## Core flow
+
+Capture → Extract evidence → Save → Skill Graph → Growth Snapshot
+
+Students write a micro-win, Gemini extracts structured skill evidence, and Apogee saves it as an evidence note in SQLite. Saved notes appear in the Skill Graph, where skills become connected signals of growth. The Growth Snapshot turns the saved evidence into a practical career artifact for reflection, resume drafting, interview preparation, portfolio writing, and planning what to learn next.
+
+## Tech stack
+
+- React, TypeScript, and Vite frontend
+- FastAPI backend
+- SQLite for saved evidence notes
+- Gemini for skill evidence extraction and grounded growth snapshots
 
 ## Run the backend
 
@@ -19,7 +32,7 @@ On PowerShell:
 $env:GEMINI_API_KEY="your-gemini-api-key"
 ```
 
-The FastAPI backend runs at `http://localhost:8000`. Saved wins remain in `backend/wins.db`, which is ignored by Git.
+The FastAPI backend runs at `http://localhost:8000`. Saved evidence notes remain in `backend/wins.db`, which is ignored by Git.
 
 ## Run the frontend
 
@@ -32,3 +45,11 @@ npm run dev
 ```
 
 Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
+
+## Checks
+
+```bash
+cd frontend
+npm run lint
+npm run build
+```

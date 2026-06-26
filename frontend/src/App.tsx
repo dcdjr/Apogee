@@ -20,6 +20,9 @@ type SkillReport = {
     top_skills: string[];
     evidence: string[];
     recommended_next_steps: string[];
+    resume_bullets: string[];
+    interview_talking_points: string[];
+    next_sprint_plan: string[];
     portfolio_blurb: string;
 };
 
@@ -27,13 +30,13 @@ type Page = "capture" | "ledger" | "report";
 type Theme = "light" | "dark";
 
 const THEME_STORAGE_KEY = "apogee-theme";
-const LEGACY_THEME_STORAGE_KEYS = [`${"skill"}vault-theme`, "proof-of-skill-theme"];
+const LEGACY_THEME_STORAGE_KEYS = [`${"skill"}vault-theme`, `${"proof"}-of-${"skill"}-theme`];
 const API_URL = `http://${window.location.hostname}:8000`;
 
 async function getErrorMessage(response: Response, fallback: string) {
     try {
         const data = (await response.json()) as { detail?: string };
-        return data.detail || fallback;
+        return data.detail && !data.detail.toLowerCase().includes("gemini") ? data.detail : fallback;
     } catch {
         return fallback;
     }
@@ -88,12 +91,12 @@ function App() {
         try {
             const response = await fetch(`${API_URL}/api/wins`);
             if (!response.ok) {
-                throw new Error(await getErrorMessage(response, "Could not load wins."));
+                throw new Error(await getErrorMessage(response, "Could not load evidence notes."));
             }
             setWins((await response.json()) as SavedEntry[]);
         } catch (error) {
             setWinsError(
-                error instanceof Error ? error.message : "Could not load your ledger.",
+                error instanceof Error ? error.message : "Something went wrong. Check that the backend is running and try again.",
             );
         } finally {
             setIsLoadingWins(false);
@@ -270,7 +273,7 @@ function App() {
             });
 
             if (!response.ok) {
-                throw new Error(await getErrorMessage(response, "Analysis failed."));
+                throw new Error(await getErrorMessage(response, "Something went wrong. Check that the backend is running and try again."));
             }
 
             setResult((await response.json()) as AnalysisResult);
@@ -278,7 +281,7 @@ function App() {
             setAnalysisError(
                 error instanceof Error
                     ? error.message
-                    : "Could not analyze this win. Please try again.",
+                    : "Something went wrong. Check that the backend is running and try again.",
             );
         } finally {
             setIsAnalyzing(false);
@@ -311,7 +314,7 @@ function App() {
             setSaveError(
                 error instanceof Error
                     ? error.message
-                    : "Could not save this win. Please try again.",
+                    : "Something went wrong. Check that the backend is running and try again.",
             );
         } finally {
             setIsSaving(false);
@@ -330,7 +333,7 @@ function App() {
             const response = await fetch(`${API_URL}/api/report`);
             if (!response.ok) {
                 throw new Error(
-                    await getErrorMessage(response, "Could not generate your skill report."),
+                    await getErrorMessage(response, "Something went wrong. Check that the backend is running and try again."),
                 );
             }
 
@@ -339,7 +342,7 @@ function App() {
             setReportError(
                 error instanceof Error
                     ? error.message
-                    : "Could not generate your skill report. Please try again.",
+                    : "Something went wrong. Check that the backend is running and try again. Please try again.",
             );
         } finally {
             setIsGeneratingReport(false);
@@ -383,7 +386,6 @@ function App() {
         >
             <nav className="top-nav" aria-label="Main navigation">
                 <button className="brand" type="button" onClick={() => setPage("capture")}>
-                    <span className="brand-mark" aria-hidden="true">A</span>
                     Apogee
                 </button>
                 <div className="nav-actions">
@@ -400,14 +402,14 @@ function App() {
                             type="button"
                             onClick={() => setPage("ledger")}
                         >
-                            My Ledger
+                            Skill Graph
                         </button>
                         <button
                             className={page === "report" ? "nav-link active" : "nav-link"}
                             type="button"
                             onClick={() => setPage("report")}
                         >
-                            Skill Report
+                            Growth Snapshot
                         </button>
                     </div>
                     <button
@@ -428,7 +430,7 @@ function App() {
                         <p className="eyebrow">FidHacks 2026</p>
                         <h1>Turn small wins into proof of growth.</h1>
                         <p className="intro">
-                            Capture something you learned, solved, or accomplished today.
+                            Capture something you learned, solved, or improved today.
                         </p>
                     </header>
 
@@ -439,11 +441,11 @@ function App() {
                                 id="micro-win"
                                 value={text}
                                 onChange={(event) => setText(event.target.value)}
-                                placeholder="Example: I finally figured out why my API request was failing..."
+                                placeholder="Example: I debugged a CORS issue between my React frontend and FastAPI backend."
                                 rows={9}
                             />
                             <button className="primary-button" type="submit" disabled={!text.trim() || isAnalyzing}>
-                                {isAnalyzing ? "Analyzing..." : "Analyze my win"}
+                                {isAnalyzing ? "Extracting..." : "Extract skill evidence"}
                             </button>
                             {analysisError && <p className="status-message error-message">{analysisError}</p>}
                         </form>
@@ -453,10 +455,10 @@ function App() {
                             {!result && !isAnalyzing && (
                                 <div className="empty-analysis">
                                     <span aria-hidden="true">AI</span>
-                                    <p>Your analysis will appear here after you submit a micro-win.</p>
+                                    <p>Your extracted evidence will appear here after you submit a micro-win.</p>
                                 </div>
                             )}
-                            {isAnalyzing && <p className="empty-state">Analyzing your win...</p>}
+                            {isAnalyzing && <p className="empty-state">Extracting skill evidence...</p>}
                             {result && (
                                 <div className="analysis-content">
                                     <h2>{result.micro_win_title}</h2>
@@ -477,10 +479,10 @@ function App() {
                                     onClick={handleSave}
                                     disabled={!result || isSaving || Boolean(savedEntry)}
                                 >
-                                    {isSaving ? "Saving..." : savedEntry ? "Saved" : "Save evidence"}
+                                    {isSaving ? "Saving evidence note..." : savedEntry ? "Saved" : "Save evidence note"}
                                 </button>
-                                <p className="save-helper">Saving adds this evidence note to your Apogee.</p>
-                                {savedEntry && <p className="status-message success-message">Saved to Apogee.</p>}
+                                <p className="save-helper">Save this evidence note to your Skill Graph.</p>
+                                {savedEntry && <p className="status-message success-message">Saved to your Skill Graph.</p>}
                                 {saveError && <p className="status-message error-message">{saveError}</p>}
                             </div>
                         </section>
@@ -490,20 +492,20 @@ function App() {
                 <section className="ledger-page obsidian-ledger">
                     <header className="ledger-header">
                         <div>
-                            <p className="eyebrow">Apogee evidence graph</p>
-                            <h1>My Ledger</h1>
+                            <p className="eyebrow">Skill Graph</p>
+                            <h1>Skill Graph</h1>
                             <p className="intro">
-                                Your ledger turns small learning moments into searchable evidence of skill growth.
+                                Saved evidence notes connected to the skills they demonstrate.
                             </p>
                         </div>
-                        <div className="ledger-stats" aria-label="Ledger summary">
+                        <div className="ledger-stats" aria-label="Skill Graph summary">
                             <div className="ledger-stat"><strong>{wins.length}</strong><span>evidence notes</span></div>
-                            <div className="ledger-stat"><strong>{skillStats.length}</strong><span>skill nodes</span></div>
+                            <div className="ledger-stat"><strong>{skillStats.length}</strong><span>skills</span></div>
                             <div className="ledger-stat"><strong>{mostCommonSkill}</strong><span>strongest signal</span></div>
                         </div>
                     </header>
 
-                    {isLoadingWins && <div className="ledger-state dark-state">Loading your vault...</div>}
+                    {isLoadingWins && <div className="ledger-state dark-state">Loading your Skill Graph...</div>}
 
                     {winsError && (
                         <div className="ledger-state dark-state error-state">
@@ -517,19 +519,19 @@ function App() {
                     {!isLoadingWins && !winsError && wins.length === 0 && (
                         <div className="ledger-state dark-state empty-ledger">
                             <span className="empty-icon" aria-hidden="true">+</span>
-                            <h2>Your vault is ready for its first evidence note.</h2>
-                            <p>Save a micro-win to begin connecting your learning moments into a skill network.</p>
+                            <h2>No evidence notes yet.</h2>
+                            <p>Capture a micro-win to start building your Skill Graph.</p>
                             <button className="primary-button" type="button" onClick={() => setPage("capture")}>
-                                Capture a win
+                                Capture a micro-win
                             </button>
                         </div>
                     )}
 
                     {!isLoadingWins && !winsError && wins.length > 0 && (
                         <div className="obsidian-workspace">
-                            <aside className="obsidian-explorer" aria-label="Vault explorer">
+                            <aside className="obsidian-explorer" aria-label="Evidence notes">
                                 <div className="obsidian-pane-title">
-                                    <span>Vault explorer</span>
+                                    <span>Evidence notes</span>
                                     <small>{filteredWins.length}</small>
                                 </div>
                                 <label className="obsidian-search" htmlFor="ledger-search">
@@ -539,23 +541,23 @@ function App() {
                                         type="search"
                                         value={ledgerSearch}
                                         onChange={(event) => setLedgerSearch(event.target.value)}
-                                        placeholder="Search vault..."
+                                        placeholder="Search evidence..."
                                     />
                                 </label>
                                 {hasLedgerFilters && (
                                     <button className="obsidian-clear" type="button" onClick={clearLedgerFilters}>
-                                        Clear search & filters
+                                        Clear search and filters
                                     </button>
                                 )}
 
                                 <div className="explorer-section">
-                                    <p>Tags</p>
+                                    <p>Skills</p>
                                     <button
                                         className={activeSkill === null ? "obsidian-tag active" : "obsidian-tag"}
                                         type="button"
                                         onClick={() => setActiveSkill(null)}
                                     >
-                                        <span># all-wins</span><small>{wins.length}</small>
+                                        <span>All evidence</span><small>{wins.length}</small>
                                     </button>
                                     <div className="obsidian-tag-list">
                                         {skillStats.map((skill) => (
@@ -575,8 +577,8 @@ function App() {
                                     <p>Evidence notes</p>
                                     {filteredWins.length === 0 ? (
                                         <div className="obsidian-no-results">
-                                            <strong>No matching wins found</strong>
-                                            <button type="button" onClick={clearLedgerFilters}>Reset vault</button>
+                                            <strong>No matching evidence found</strong>
+                                            <button type="button" onClick={clearLedgerFilters}>Clear filters</button>
                                         </div>
                                     ) : filteredWins.map((win) => (
                                         <button
@@ -594,12 +596,12 @@ function App() {
 
                             <section className="graph-pane" aria-label="Skill evidence graph">
                                 <div className="graph-tabbar">
-                                    <div className="graph-tab"><span aria-hidden="true">G</span> Skill graph <small>x</small></div>
+                                    <div className="graph-tab"><span aria-hidden="true">G</span> Skill Graph <small>x</small></div>
                                     <p className="graph-explanation">
-                                        Skill nodes are extracted from saved wins. Evidence notes connect to the skills they demonstrate.
+                                        Each evidence note connects to the skills it demonstrates.
                                     </p>
                                     <div className="graph-actions">
-                                        <span>{graphData.winNodes.length} notes</span>
+                                        <span>{graphData.winNodes.length} evidence notes</span>
                                         <span>{graphData.skillNodes.length} skills</span>
                                     </div>
                                 </div>
@@ -607,8 +609,8 @@ function App() {
                                     {filteredWins.length === 0 ? (
                                         <div className="graph-empty">
                                             <span aria-hidden="true">+</span>
-                                            <h2>No matching wins found</h2>
-                                            <p>Reset the vault to restore the full evidence network.</p>
+                                            <h2>No matching evidence found</h2>
+                                            <p>Clear your search or skill filter to restore the full graph.</p>
                                             <button type="button" onClick={clearLedgerFilters}>Clear filters</button>
                                         </div>
                                     ) : (
@@ -616,7 +618,7 @@ function App() {
                                             className="skill-graph"
                                             viewBox={`0 0 ${graphData.width} ${graphData.height}`}
                                             role="img"
-                                            aria-label="Connected graph of saved wins and demonstrated skills"
+                                            aria-label="Connected graph of evidence notes and demonstrated skills"
                                         >
                                             <defs>
                                                 <radialGradient id="graphGlow">
@@ -694,8 +696,8 @@ function App() {
                                 </div>
                             </section>
 
-                            <aside className="obsidian-inspector" aria-label="Graph and note inspector">
-                                <div className="obsidian-pane-title"><span>Inspector</span><small>...</small></div>
+                            <aside className="obsidian-inspector" aria-label="Skill Graph inspector">
+                                <div className="obsidian-pane-title"><span>Selected evidence</span><small>...</small></div>
                                 <section className="inspector-controls">
                                     <p>Display</p>
                                     <label className="toggle-row">
@@ -708,8 +710,8 @@ function App() {
                                         <i aria-hidden="true" />
                                     </label>
                                     <p className="control-helper">Turn labels off when the graph gets crowded.</p>
-                                    <div className="inspector-metric"><span>Visible links</span><strong>{graphData.edges.length}</strong></div>
-                                    <div className="inspector-metric"><span>Latest note</span><strong>{wins[0].micro_win_title}</strong></div>
+                                    <div className="inspector-metric"><span>Evidence links</span><strong>{graphData.edges.length}</strong></div>
+                                    <div className="inspector-metric"><span>Latest evidence</span><strong>{wins[0].micro_win_title}</strong></div>
                                 </section>
 
                                 <section className="inspector-note">
@@ -727,14 +729,14 @@ function App() {
                                                 <p>{selectedWin.next_step}</p>
                                             </div>
                                             <div className="inspector-block reflection">
-                                                <h3>Evidence note</h3>
+                                                <h3>Original reflection</h3>
                                                 <p>{selectedWin.raw_text}</p>
                                             </div>
                                         </article>
                                     ) : (
                                         <div className="inspector-placeholder">
                                             <span aria-hidden="true">+</span>
-                                            <p>Select a node or evidence note to inspect it.</p>
+                                            <p>Select an evidence note or skill node to inspect it.</p>
                                         </div>
                                     )}
                                 </section>
@@ -746,14 +748,14 @@ function App() {
                 <section className="report-page">
                     <header className="report-header">
                         <div>
-                            <p className="eyebrow">Skill report</p>
-                            <h1>Your progress, made useful.</h1>
+                            <p className="eyebrow">Growth Snapshot</p>
+                            <h1>Your growth, made usable.</h1>
                             <p className="intro">
-                                Generate a focused progress report from your saved evidence notes.
+                                Generate a focused snapshot from your saved evidence notes.
                             </p>
                             {!isLoadingWins && !winsError && wins.length > 0 && (
                                 <p className="report-basis">
-                                    Based on {reportEvidenceCount} saved {reportEvidenceCount === 1 ? "win" : "wins"} from your Apogee.
+                                    Based on {reportEvidenceCount} saved evidence {reportEvidenceCount === 1 ? "note" : "notes"}.
                                 </p>
                             )}
                         </div>
@@ -763,21 +765,21 @@ function App() {
                             onClick={() => void handleGenerateReport()}
                             disabled={isGeneratingReport || isLoadingWins || wins.length === 0}
                         >
-                            {isGeneratingReport ? "Generating report..." : "Generate Skill Report"}
+                            {isGeneratingReport ? "Generating..." : "Generate Growth Snapshot"}
                         </button>
                     </header>
 
                     {isLoadingWins && (
                         <div className="report-state report-loading" aria-live="polite">
                             <span className="report-pulse" aria-hidden="true">...</span>
-                            <h2>Checking your ledger</h2>
-                            <p>Gathering the saved evidence notes that will shape your report.</p>
+                            <h2>Checking your evidence notes</h2>
+                            <p>Gathering the saved evidence notes that will shape your snapshot.</p>
                         </div>
                     )}
 
                     {!isLoadingWins && winsError && (
                         <div className="report-state error-state" role="alert">
-                            <h2>We could not load your ledger.</h2>
+                            <h2>We could not load your evidence notes.</h2>
                             <p>{winsError}</p>
                             <button className="secondary-button" type="button" onClick={() => void loadWins()}>
                                 Try again
@@ -788,12 +790,12 @@ function App() {
                     {!isLoadingWins && !winsError && wins.length === 0 && (
                         <div className="report-state report-empty-state">
                             <span className="report-pulse" aria-hidden="true">+</span>
-                            <h2>Add evidence before generating a report.</h2>
+                            <h2>Save evidence before generating a snapshot.</h2>
                             <p>
-                                Capture and save at least one learning win. Your report will use those ledger notes as its only evidence.
+                                Save at least one evidence note before generating a growth snapshot.
                             </p>
                             <button className="primary-button" type="button" onClick={() => setPage("capture")}>
-                                Capture your first win
+                                Capture your first micro-win
                             </button>
                         </div>
                     )}
@@ -801,14 +803,14 @@ function App() {
                     {!isLoadingWins && !winsError && wins.length > 0 && isGeneratingReport && (
                         <div className="report-state report-loading" aria-live="polite">
                             <span className="report-pulse" aria-hidden="true">AI</span>
-                            <h2>Building your progress snapshot</h2>
+                            <h2>Building your growth snapshot from saved evidence</h2>
                             <p>Reviewing recurring skills, evidence, and practical next actions.</p>
                         </div>
                     )}
 
                     {!isLoadingWins && !winsError && wins.length > 0 && !isGeneratingReport && reportError && (
                         <div className="report-state error-state" role="alert">
-                            <h2>We could not build the report yet.</h2>
+                            <h2>We could not build the snapshot yet.</h2>
                             <p>{reportError}</p>
                             <button
                                 className="secondary-button"
@@ -825,8 +827,8 @@ function App() {
                             <span className="report-pulse" aria-hidden="true">{wins.length}</span>
                             <h2>Your evidence is ready.</h2>
                             <p>
-                                Based on {reportEvidenceCount} saved {reportEvidenceCount === 1 ? "win" : "wins"} from your Apogee.
-                                Generate a concise artifact that connects your strongest skill signals to real examples.
+                                Based on {reportEvidenceCount} saved evidence {reportEvidenceCount === 1 ? "note" : "notes"}.
+                                Generate a concise career artifact that connects your skill signals to real examples.
                             </p>
                         </div>
                     )}
@@ -835,12 +837,12 @@ function App() {
                         <article className="report-card focused-report" aria-live="polite">
                             <section className="report-summary-card">
                                 <div>
-                                    <p className="card-label">Progress snapshot</p>
+                                    <p className="card-label">Summary</p>
                                     <h2>{report.headline}</h2>
                                     <p>{report.progress_summary}</p>
                                 </div>
                                 <p className="report-source-note">
-                                    Based on {reportEvidenceCount} saved {reportEvidenceCount === 1 ? "win" : "wins"} from your Apogee
+                                    Based on {reportEvidenceCount} saved evidence {reportEvidenceCount === 1 ? "note" : "notes"}
                                 </p>
                             </section>
 
@@ -857,7 +859,7 @@ function App() {
                             <div className="report-detail-grid">
                                 <section className="report-evidence-section">
                                     <div className="report-section-heading">
-                                        <p className="card-label">Ledger evidence</p>
+                                        <p className="card-label">Evidence</p>
                                         <h3>Proof behind the progress</h3>
                                     </div>
                                     <ul className="evidence-list">
@@ -876,11 +878,38 @@ function App() {
                                 </section>
                             </div>
 
+                            <section className="career-toolkit" aria-label="Career artifact sections">
+                                <div className="report-section-heading">
+                                    <p className="card-label">Career artifacts</p>
+                                    <h3>Use the evidence beyond this app</h3>
+                                </div>
+                                <div className="career-toolkit-grid">
+                                    <section>
+                                        <h4>Resume bullets</h4>
+                                        <ul className="evidence-list">
+                                            {report.resume_bullets.map((item) => <li key={item}>{item}</li>)}
+                                        </ul>
+                                    </section>
+                                    <section>
+                                        <h4>Interview talking points</h4>
+                                        <ul className="evidence-list">
+                                            {report.interview_talking_points.map((item) => <li key={item}>{item}</li>)}
+                                        </ul>
+                                    </section>
+                                    <section>
+                                        <h4>Next sprint plan</h4>
+                                        <ol className="action-list">
+                                            {report.next_sprint_plan.map((item) => <li key={item}>{item}</li>)}
+                                        </ol>
+                                    </section>
+                                </div>
+                            </section>
+
                             <section className="portfolio-artifact">
                                 <div className="portfolio-heading">
                                     <div>
-                                        <p className="card-label">Portfolio-ready blurb</p>
-                                        <h3>Ready for LinkedIn, a resume, or your website</h3>
+                                        <p className="card-label">Career artifact</p>
+                                        <h3>Portfolio blurb for LinkedIn, a resume, or your website</h3>
                                     </div>
                                     <button
                                         className="secondary-button copy-blurb-button"
@@ -894,7 +923,7 @@ function App() {
                                 <p className={copyError ? "copy-feedback error-message" : "copy-feedback"} aria-live="polite">
                                     {copyError || (isBlurbCopied
                                         ? "Copied to clipboard."
-                                        : "Edit the wording to match your voice before publishing.")}
+                                        : "Use this as a starting point and adjust it to match your voice.")}
                                 </p>
                             </section>
                         </article>
