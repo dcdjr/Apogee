@@ -5,12 +5,12 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: light;
-  background: #f4f5f8;
+  background: #f6f7f9;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  background: #15151c;
+  background: #0f141a;
 }
 
 html,

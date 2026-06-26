@@ -1,6 +1,6 @@
-# SkillVault
+# Apogee
 
-SkillVault captures everyday learning wins, extracts the skills behind them, and turns them into a searchable evidence graph and progress report.
+Apogee captures everyday learning wins, extracts the skills behind them, and turns them into a searchable evidence graph and progress report.
 
 ## Run the backend
 

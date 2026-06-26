@@ -1,14 +1,14 @@
-# SkillVault Frontend
+# Apogee Frontend
 
-React, TypeScript, and Vite frontend for SkillVault.
+React, TypeScript, and Vite frontend for Apogee.
 
-SkillVault captures everyday learning wins, extracts the skills behind them, and turns them into a searchable evidence graph and progress report.
+Apogee captures everyday learning wins, extracts the skills behind them, and turns them into a searchable evidence graph and progress report.
 
 ## What it includes
 
 - Capture and AI extraction of skill evidence from a micro-win
 - Saving evidence notes to the FastAPI and SQLite backend
-- Searchable SkillVault explorer and interactive skill graph
+- Searchable Apogee explorer and interactive skill graph
 - AI-generated Skill Report with a copyable portfolio blurb
 - Persisted light and dark themes
 

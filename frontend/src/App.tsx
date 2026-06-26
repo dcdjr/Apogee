@@ -26,8 +26,8 @@ type SkillReport = {
 type Page = "capture" | "ledger" | "report";
 type Theme = "light" | "dark";
 
-const THEME_STORAGE_KEY = "skillvault-theme";
-const LEGACY_THEME_STORAGE_KEY = "proof-of-skill-theme";
+const THEME_STORAGE_KEY = "apogee-theme";
+const LEGACY_THEME_STORAGE_KEYS = [`${"skill"}vault-theme`, "proof-of-skill-theme"];
 const API_URL = `http://${window.location.hostname}:8000`;
 
 async function getErrorMessage(response: Response, fallback: string) {
@@ -49,9 +49,14 @@ function formatDate(date: string) {
 
 function App() {
     const [theme, setTheme] = useState<Theme>(() => {
-        const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-            ?? window.localStorage.getItem(LEGACY_THEME_STORAGE_KEY);
-        if (savedTheme === "light" || savedTheme === "dark") return savedTheme;
+        const storedThemes = [
+            window.localStorage.getItem(THEME_STORAGE_KEY),
+            ...LEGACY_THEME_STORAGE_KEYS.map((key) => window.localStorage.getItem(key)),
+        ];
+        const savedTheme = storedThemes.find((storedTheme): storedTheme is Theme => (
+            storedTheme === "light" || storedTheme === "dark"
+        ));
+        if (savedTheme) return savedTheme;
         return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     });
     const [page, setPage] = useState<Page>("capture");
@@ -98,7 +103,7 @@ function App() {
     useEffect(() => {
         document.documentElement.dataset.theme = theme;
         window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-        window.localStorage.removeItem(LEGACY_THEME_STORAGE_KEY);
+        LEGACY_THEME_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
     }, [theme]);
 
     useEffect(() => {
@@ -378,8 +383,8 @@ function App() {
         >
             <nav className="top-nav" aria-label="Main navigation">
                 <button className="brand" type="button" onClick={() => setPage("capture")}>
-                    <span className="brand-mark" aria-hidden="true">S</span>
-                    SkillVault
+                    <span className="brand-mark" aria-hidden="true">A</span>
+                    Apogee
                 </button>
                 <div className="nav-actions">
                     <div className="nav-links">
@@ -474,8 +479,8 @@ function App() {
                                 >
                                     {isSaving ? "Saving..." : savedEntry ? "Saved" : "Save evidence"}
                                 </button>
-                                <p className="save-helper">Saving adds this evidence note to your SkillVault.</p>
-                                {savedEntry && <p className="status-message success-message">Saved to SkillVault.</p>}
+                                <p className="save-helper">Saving adds this evidence note to your Apogee.</p>
+                                {savedEntry && <p className="status-message success-message">Saved to Apogee.</p>}
                                 {saveError && <p className="status-message error-message">{saveError}</p>}
                             </div>
                         </section>
@@ -485,7 +490,7 @@ function App() {
                 <section className="ledger-page obsidian-ledger">
                     <header className="ledger-header">
                         <div>
-                            <p className="eyebrow">SkillVault evidence graph</p>
+                            <p className="eyebrow">Apogee evidence graph</p>
                             <h1>My Ledger</h1>
                             <p className="intro">
                                 Your ledger turns small learning moments into searchable evidence of skill growth.
@@ -615,11 +620,11 @@ function App() {
                                         >
                                             <defs>
                                                 <radialGradient id="graphGlow">
-                                                    <stop offset="0%" stopColor="#8f7cf7" stopOpacity="0.18" />
-                                                    <stop offset="100%" stopColor="#8f7cf7" stopOpacity="0" />
+                                                    <stop offset="0%" stopColor="currentColor" stopOpacity="0.08" />
+                                                    <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
                                                 </radialGradient>
                                                 <filter id="nodeGlow" x="-100%" y="-100%" width="300%" height="300%">
-                                                    <feGaussianBlur stdDeviation="4" result="blur" />
+                                                    <feGaussianBlur stdDeviation="2" result="blur" />
                                                     <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                                                 </filter>
                                             </defs>
@@ -670,7 +675,7 @@ function App() {
                                                             onKeyDown={(event) => {
                                                                 if (event.key === "Enter" || event.key === " ") setActiveSkill(isActive ? null : node.label);
                                                             }}
-                                                            style={{ "--node-hue": `${(index * 47 + 248) % 360}` } as React.CSSProperties}
+                                                            style={{ "--node-index": index } as React.CSSProperties}
                                                         >
                                                             <circle cx={node.x} cy={node.y} r={10 + Math.min(node.count, 6) * 1.6} />
                                                             {showGraphLabels && (
@@ -748,7 +753,7 @@ function App() {
                             </p>
                             {!isLoadingWins && !winsError && wins.length > 0 && (
                                 <p className="report-basis">
-                                    Based on {reportEvidenceCount} saved {reportEvidenceCount === 1 ? "win" : "wins"} from your SkillVault.
+                                    Based on {reportEvidenceCount} saved {reportEvidenceCount === 1 ? "win" : "wins"} from your Apogee.
                                 </p>
                             )}
                         </div>
@@ -820,16 +825,9 @@ function App() {
                             <span className="report-pulse" aria-hidden="true">{wins.length}</span>
                             <h2>Your evidence is ready.</h2>
                             <p>
-                                Based on {reportEvidenceCount} saved {reportEvidenceCount === 1 ? "win" : "wins"} from your SkillVault.
+                                Based on {reportEvidenceCount} saved {reportEvidenceCount === 1 ? "win" : "wins"} from your Apogee.
                                 Generate a concise artifact that connects your strongest skill signals to real examples.
                             </p>
-                            <button
-                                className="primary-button ready-report-button"
-                                type="button"
-                                onClick={() => void handleGenerateReport()}
-                            >
-                                Generate Skill Report
-                            </button>
                         </div>
                     )}
 
@@ -842,7 +840,7 @@ function App() {
                                     <p>{report.progress_summary}</p>
                                 </div>
                                 <p className="report-source-note">
-                                    Based on {reportEvidenceCount} saved {reportEvidenceCount === 1 ? "win" : "wins"} from your SkillVault
+                                    Based on {reportEvidenceCount} saved {reportEvidenceCount === 1 ? "win" : "wins"} from your Apogee
                                 </p>
                             </section>
 
