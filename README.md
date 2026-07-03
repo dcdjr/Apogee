@@ -1,5 +1,7 @@
 # Apogee
 
+## Built for Fidelity's FidHacks 2026
+
 Apogee turns everyday learning wins into visible proof of growth.
 
 ## Core flow
